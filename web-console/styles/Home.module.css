@@ -108,7 +108,7 @@
   gap: 0.5rem;
 }
 
-:global(input) {
+.input {
   width: 100%;
   padding: 0.5rem 0.6rem;
   border-radius: 8px;
@@ -117,7 +117,7 @@
   color: #f3f7ff;
 }
 
-:global(button) {
+.button {
   border: none;
   border-radius: 8px;
   background: linear-gradient(120deg, #1f8efa, #11c7a0);
@@ -128,7 +128,7 @@
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
-:global(button:hover) {
+.button:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 24px rgba(17, 199, 160, 0.35);
 }

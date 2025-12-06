@@ -170,6 +170,7 @@ export default function Home() {
               <label>
                 Fleet ID
                 <input
+                  className={styles.input}
                   value={placingFleet.fleetId}
                   onChange={(e) => setPlacingFleet((p) => ({ ...p, fleetId: e.target.value }))}
                   required
@@ -178,12 +179,13 @@ export default function Home() {
               <label>
                 Preferred regions (csv)
                 <input
+                  className={styles.input}
                   value={placingFleet.regions}
                   onChange={(e) => setPlacingFleet((p) => ({ ...p, regions: e.target.value }))}
                   required
                 />
               </label>
-              <button type="submit">Plan shard</button>
+              <button className={styles.button} type="submit">Plan shard</button>
             </form>
 
             <div className={styles.controlCard}>
@@ -191,7 +193,7 @@ export default function Home() {
               <p className={styles.subtle}>Runs /failover/plan on control plane.</p>
               <div className={styles.inlineActions}>
                 {shards.map((s) => (
-                  <button key={s.id} onClick={() => handleFailover(s.id, s.standbyRegion)}>
+                  <button className={styles.button} key={s.id} onClick={() => handleFailover(s.id, s.standbyRegion)}>
                     {s.id} → {s.standbyRegion}
                   </button>
                 ))}
@@ -201,7 +203,7 @@ export default function Home() {
             <div className={styles.controlCard}>
               <p className={styles.label}>Router probe</p>
               <p className={styles.subtle}>Hit /route to verify cache + lane selection.</p>
-              <button onClick={handleRouteProbe}>Send probe</button>
+              <button className={styles.button} onClick={handleRouteProbe}>Send probe</button>
               <code className={styles.code}>{routeResult || "awaiting probe..."}</code>
             </div>
           </div>
