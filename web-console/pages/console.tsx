@@ -8,11 +8,26 @@ type ShardStatus = {
   standbyRegion: string;
   consistencyTier: "bronze" | "silver" | "gold";
   replicationLane: "s3-only" | "streaming+s3";
+  durabilityTier?: "standard" | "enhanced" | "platinum";
+  commitPolicy?: "regional-quorum" | "global-quorum";
   walBacklog: number;
   replicaLag: number;
   state: "healthy" | "promoting" | "verifying" | "degraded";
   fleets: string[];
 };
+
+type PolicyDoc = {
+  id: string;
+  durability: string;
+  consistency: string;
+  residency: string;
+  performance: { targetP95Ms: number };
+  cost: { maxSpendUsd: number; autoscaleMaxNodes: number };
+  operational: { approvalsRequired: boolean; approverRoles: string[] };
+  version: number;
+};
+
+type EventRecord = { id: string; type: string; detail: Record<string, unknown>; ts: string };
 
 const apiBase = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:4000";
 const routerBase = process.env.NEXT_PUBLIC_ROUTER_BASE || "http://localhost:4100";
@@ -24,6 +39,8 @@ const initialShards: ShardStatus[] = [
     standbyRegion: "us-west-2",
     consistencyTier: "gold",
     replicationLane: "streaming+s3",
+    durabilityTier: "enhanced",
+    commitPolicy: "regional-quorum",
     walBacklog: 3,
     replicaLag: 2,
     state: "healthy",
@@ -35,6 +52,8 @@ const initialShards: ShardStatus[] = [
     standbyRegion: "us-east-1",
     consistencyTier: "silver",
     replicationLane: "s3-only",
+    durabilityTier: "standard",
+    commitPolicy: "regional-quorum",
     walBacklog: 6,
     replicaLag: 5,
     state: "healthy",
@@ -45,6 +64,8 @@ const initialShards: ShardStatus[] = [
 export default function ConsolePage() {
   const [shards, setShards] = useState<ShardStatus[]>(initialShards);
   const [log, setLog] = useState<string[]>([]);
+  const [policies, setPolicies] = useState<PolicyDoc[]>([]);
+  const [events, setEvents] = useState<EventRecord[]>([]);
   const [routeResult, setRouteResult] = useState<string>("");
   const [placingFleet, setPlacingFleet] = useState({ fleetId: "f-new", regions: "us-east-1" });
 
@@ -59,6 +80,11 @@ export default function ConsolePage() {
       );
     }, 1200);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    void refreshPolicies();
+    void refreshEvents();
   }, []);
 
   const scoreColor = (val: number, warn: number, danger: number) => {
@@ -118,6 +144,30 @@ export default function ConsolePage() {
     } catch (err) {
       setRouteResult(`probe failed: ${String(err)}`);
     }
+  };
+
+  const refreshPolicies = async () => {
+    try {
+      const res = await fetch(`${apiBase}/policies`);
+      const data = await res.json();
+      setPolicies(data);
+    } catch (err) {
+      setLog((l) => [`Policy fetch failed: ${String(err)}`, ...l].slice(0, 8));
+    }
+  };
+
+  const refreshEvents = async () => {
+    try {
+      const res = await fetch(`${apiBase}/events`);
+      const data = await res.json();
+      setEvents(data);
+    } catch (err) {
+      setLog((l) => [`Event fetch failed: ${String(err)}`, ...l].slice(0, 8));
+    }
+  };
+
+  const handleAwsAction = (action: string) => {
+    setLog((l) => [`AWS helper: ${action}`, ...l].slice(0, 8));
   };
 
   const aggregate = useMemo(() => {
@@ -232,6 +282,14 @@ export default function ConsolePage() {
                   <strong>{shard.replicationLane}</strong>
                 </div>
                 <div className={styles.statRow}>
+                  <span>Durability tier</span>
+                  <strong>{shard.durabilityTier || "standard"}</strong>
+                </div>
+                <div className={styles.statRow}>
+                  <span>Commit policy</span>
+                  <strong>{shard.commitPolicy || "regional-quorum"}</strong>
+                </div>
+                <div className={styles.statRow}>
                   <span>WAL backlog</span>
                   <div className={styles.bar}>
                     <div
@@ -262,8 +320,74 @@ export default function ConsolePage() {
 
         <section className={styles.panel}>
           <div className={styles.panelHead}>
-            <h2>Event Stream</h2>
-            <p className={styles.subtle}>Recent control-plane operations.</p>
+            <h2>Policies & Governance</h2>
+            <p className={styles.subtle}>Policy-as-code surface and recent platform events.</p>
+          </div>
+          <div className={styles.controlsGrid}>
+            <div className={styles.controlCard}>
+              <p className={styles.label}>Policies</p>
+              <p className={styles.subtle}>Durability/consistency/residency/cost per policy.</p>
+              <button className={styles.button} onClick={refreshPolicies}>Refresh policies</button>
+              <div className={styles.logBox}>
+                {policies.length === 0 && <p className={styles.subtle}>No policies loaded.</p>}
+                {policies.map((p) => (
+                  <div key={p.id} className={styles.logLine}>
+                    {p.id} v{p.version} · dur={p.durability} · cons={p.consistency} · resid={p.residency} · p95={p.performance.targetP95Ms}ms
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className={styles.controlCard}>
+              <p className={styles.label}>Events</p>
+              <p className={styles.subtle}>Last 50 control-plane events (mock).</p>
+              <button className={styles.button} onClick={refreshEvents}>Refresh events</button>
+              <div className={styles.logBox}>
+                {events.length === 0 && <p className={styles.subtle}>No events yet.</p>}
+                {events.map((e) => (
+                  <div key={e.id} className={styles.logLine}>
+                    {e.ts} · {e.type} · {JSON.stringify(e.detail)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2>AWS helper actions (mocked)</h2>
+            <p className={styles.subtle}>Quick shortcuts you might wire to AWS APIs/CloudFormation/Terraform.</p>
+          </div>
+          <div className={styles.controlsGrid}>
+            <div className={styles.controlCard}>
+              <p className={styles.label}>Resiliency</p>
+              <div className={styles.inlineActions}>
+                <button className={styles.button} onClick={() => handleAwsAction("Provision S3 bucket with CRR + Object Lock")}>S3 CRR + Object Lock</button>
+                <button className={styles.button} onClick={() => handleAwsAction("Deploy Kinesis stream for streaming lane")}>Create Kinesis stream</button>
+                <button className={styles.button} onClick={() => handleAwsAction("Provision Redis/ElastiCache for regional cache")}>Add Redis cache</button>
+              </div>
+            </div>
+            <div className={styles.controlCard}>
+              <p className={styles.label}>Shard capacity</p>
+              <div className={styles.inlineActions}>
+                <button className={styles.button} onClick={() => handleAwsAction("Scale EKS node group for shard pool")}>Scale shard pool</button>
+                <button className={styles.button} onClick={() => handleAwsAction("Allocate dedicated shard for hot fleet")}>Create dedicated shard</button>
+              </div>
+            </div>
+            <div className={styles.controlCard}>
+              <p className={styles.label}>Routing & DNS</p>
+              <div className={styles.inlineActions}>
+                <button className={styles.button} onClick={() => handleAwsAction("Update Route53 failover records for routers")}>Update Route53</button>
+                <button className={styles.button} onClick={() => handleAwsAction("Refresh router cache via event bus")}>Refresh router cache</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2>Local event stream</h2>
+            <p className={styles.subtle}>Console actions log (placement, failover, probes, helper actions).</p>
           </div>
           <div className={styles.logBox}>
             {log.length === 0 && <p className={styles.subtle}>No events yet. Trigger placement/failover to see activity.</p>}
