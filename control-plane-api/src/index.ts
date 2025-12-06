@@ -46,6 +46,17 @@ type ShardMapEntry = {
   };
 };
 
+type PolicyDocument = {
+  id: string;
+  durability: "standard" | "enhanced" | "platinum";
+  consistency: "strong" | "bounded" | "eventual";
+  residency: "us-only" | "eu-only" | "any";
+  performance: { targetP95Ms: number };
+  cost: { maxSpendUsd: number; autoscaleMaxNodes: number };
+  operational: { approvalsRequired: boolean; approverRoles: string[] };
+  version: number;
+};
+
 const tenants: Tenant[] = [
   { id: "t-acme", name: "Acme Logistics", slaTier: "gold", dedicatedRouters: true, dedicatedShards: true },
   { id: "t-globex", name: "Globex Fleet", slaTier: "silver" },
@@ -146,6 +157,27 @@ const rateLimitSchema = z.object({
   storageGb: z.number().int().min(1),
 });
 
+const policies: PolicyDocument[] = [
+  {
+    id: "policy-default",
+    durability: "standard",
+    consistency: "bounded",
+    residency: "any",
+    performance: { targetP95Ms: 120 },
+    cost: { maxSpendUsd: 10000, autoscaleMaxNodes: 50 },
+    operational: { approvalsRequired: true, approverRoles: ["platform-admin"] },
+    version: 1,
+  },
+];
+
+type Event = { id: string; type: string; detail: Record<string, unknown>; ts: string };
+const events: Event[] = [];
+
+function emitEvent(type: string, detail: Record<string, unknown>) {
+  events.unshift({ id: nanoid(8), type, detail, ts: new Date().toISOString() });
+  if (events.length > 50) events.pop();
+}
+
 function findShardByFleet(fleetId: string): ShardMapEntry | undefined {
   return shardMap.find((entry) => entry.fleets.includes(fleetId));
 }
@@ -220,6 +252,7 @@ function chooseShardForFleet({
     },
   };
   shardMap.push(newShard);
+  emitEvent("shard.assigned", { shardId, fleetId, durability, commitPolicy });
   return newShard;
 }
 
@@ -249,6 +282,7 @@ async function main() {
   app.post("/policy", async (req, reply) => {
     const body = policyInputSchema.parse(req.body);
     const validation = validatePolicy(body);
+    emitEvent("policy.updated", { policy: body });
     reply.code(201);
     return { policy: body, validation };
   });
@@ -273,6 +307,7 @@ async function main() {
   app.post("/placement/plan", async (req, reply) => {
     const payload = placementInputSchema.parse(req.body);
     const shard = chooseShardForFleet(payload);
+    emitEvent("placement.planned", { fleetId: payload.fleetId, shardId: shard.shardId, durability: payload.durability });
     reply.code(201);
     return shard;
   });
@@ -281,6 +316,7 @@ async function main() {
 
   app.post("/failover/plan", async (req) => {
     const payload = failoverRequestSchema.parse(req.body);
+    emitEvent("failover.planned", payload);
     return planFailover(payload.shardId, payload.promoteRegion);
   });
 
@@ -292,6 +328,10 @@ async function main() {
       limits: { qps: payload.qps, storageGb: payload.storageGb },
     };
   });
+
+  app.get("/policies", async () => policies);
+
+  app.get("/events", async () => events);
 
   const port = Number(process.env.PORT || 4000);
   await app.listen({ port, host: "0.0.0.0" });

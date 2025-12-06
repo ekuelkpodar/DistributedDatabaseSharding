@@ -4,8 +4,9 @@ import styles from "../styles/Home.module.css";
 
 const highlights = [
   "Control plane + data plane separation with DynamoDB Global Tables",
+  "Policy-as-code: durability, consistency, residency, cost, approvals",
   "Two-lane replication: streaming (Kinesis/MSK) + S3 CRR archive",
-  "State-machine orchestration for failover/failback/split",
+  "State-machine orchestration and governed workflows (Plan→Simulate→Approve→Execute→Verify→Report)",
   "Per-tenant isolation, quotas, and optional dedicated router/shard pools",
   "OpenTelemetry everywhere: traces, metrics, structured audit logs",
 ];
@@ -24,11 +25,13 @@ const tiers = [
 ];
 
 const checklist = [
+  "Policy-as-code for durability/consistency/residency/cost with versioning",
+  "Governed workflows (Plan→Simulate→Approve→Execute→Verify→Report)",
   "Placement engine v2 with residency, cost, and hotness scoring",
   "Failover/failback state machines with verification gates",
   "Analytics plane to offload OLTP (Iceberg/Delta on S3)",
-  "Policy-as-code for data residency and SLO tiers",
   "Progressive delivery: canary/blue-green per region",
+  "Event-driven control plane with audit + replay for shard map changes",
 ];
 
 export default function Home() {
