@@ -37,6 +37,9 @@ type ShardMapEntry = {
   nodes: ShardNode[];
   replicationLane: "s3-only" | "streaming+s3";
   consistencyTier: Tier;
+  durabilityTier: "standard" | "enhanced" | "platinum";
+  commitPolicy: "regional-quorum" | "global-quorum";
+  azs: string[];
   quotas: {
     maxQps: number;
     maxStorageGb: number;
@@ -92,6 +95,9 @@ const shardMap: ShardMapEntry[] = [
     ],
     replicationLane: "streaming+s3",
     consistencyTier: "gold",
+    durabilityTier: "enhanced",
+    commitPolicy: "regional-quorum",
+    azs: ["use1-az1", "use1-az2", "use1-az3"],
     quotas: { maxQps: 5000, maxStorageGb: 500 },
   },
   {
@@ -113,6 +119,9 @@ const shardMap: ShardMapEntry[] = [
     ],
     replicationLane: "s3-only",
     consistencyTier: "silver",
+    durabilityTier: "standard",
+    commitPolicy: "regional-quorum",
+    azs: ["euw1-az1", "euw1-az2", "euw1-az3"],
     quotas: { maxQps: 2000, maxStorageGb: 300 },
   },
 ];
@@ -123,6 +132,7 @@ const placementInputSchema = z.object({
   hotnessScore: z.number().int().min(0).max(100),
   residency: z.enum(["us-only", "eu-only", "any"]).default("any"),
   tier: z.enum(["bronze", "silver", "gold"]).default("silver"),
+  durability: z.enum(["standard", "enhanced", "platinum"]).default("standard"),
 });
 
 const failoverRequestSchema = z.object({
@@ -146,6 +156,7 @@ function chooseShardForFleet({
   hotnessScore,
   residency,
   tier,
+  durability,
 }: z.infer<typeof placementInputSchema>): ShardMapEntry {
   const existing = findShardByFleet(fleetId);
   if (existing) {
@@ -179,6 +190,8 @@ function chooseShardForFleet({
     (residencyFiltered.sort((a, b) => a[1] - b[1])[0]?.[0] as Region);
 
   const shardId = `shard-${candidateRegion}-${hotnessScore}`;
+  const commitPolicy = durability === "platinum" ? "global-quorum" : "regional-quorum";
+  const replicationLane = tier === "bronze" ? "s3-only" : "streaming+s3";
   const newShard: ShardMapEntry = {
     shardId,
     fleets: [fleetId],
@@ -196,8 +209,11 @@ function chooseShardForFleet({
         status: "healthy",
       },
     ],
-    replicationLane: tier === "bronze" ? "s3-only" : "streaming+s3",
+    replicationLane,
     consistencyTier: tier,
+    durabilityTier: durability,
+    commitPolicy,
+    azs: [`${candidateRegion}-az1`, `${candidateRegion}-az2`, `${candidateRegion}-az3`],
     quotas: {
       maxQps: tier === "gold" ? 8000 : tier === "silver" ? 4000 : 1000,
       maxStorageGb: tier === "gold" ? 1000 : tier === "silver" ? 500 : 200,

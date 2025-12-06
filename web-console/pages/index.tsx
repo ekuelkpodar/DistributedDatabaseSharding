@@ -18,9 +18,9 @@ const pillars = [
 ];
 
 const tiers = [
-  { name: "Bronze", rpo: "≤5m", rto: "≤15m", lane: "S3-only archive", notes: "Async DR, regional routers" },
-  { name: "Silver", rpo: "≤30s", rto: "≤5m", lane: "Streaming + S3", notes: "Bounded staleness, faster failover" },
-  { name: "Gold/Plat", rpo: "≤5s", rto: "≤2m", lane: "Streaming + sync + S3", notes: "Dedicated pools, BYOK optional" },
+  { name: "Standard", rpo: "≤5m", rto: "≤15m", lane: "Regional sync quorum + async cross-region", notes: "Low latency; small RPO on region loss" },
+  { name: "Enhanced", rpo: "≈ seconds", rto: "≤5m", lane: "Sync AZ quorum + streaming cross-region + S3 archive", notes: "Very low RPO; immutable WAL archive" },
+  { name: "Platinum", rpo: "near-zero", rto: "≤2m", lane: "Global quorum commit (optional) + streaming + S3", notes: "Higher latency; explicit SLA tradeoffs" },
 ];
 
 const checklist = [

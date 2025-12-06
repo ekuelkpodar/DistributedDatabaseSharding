@@ -15,6 +15,10 @@
   - Lane B: S3 + CRR immutable WAL archive with versioned manifests and checksums (authoritative replay).
 - Primaries emit WAL/binlog segments to local staging; Replication Worker ships to S3 and/or stream.
 - Recovery Worker tails manifests and replays to warm standby until LSN alignment. Optional Object Lock.
+- Durability tiers:
+  - Standard: regional sync quorum + async cross-region.
+  - Enhanced: regional sync quorum + streaming cross-region + S3 archive.
+  - Platinum: optional global quorum commit (regional quorum + standby ACK) for near-zero/zero RPO with higher latency.
 
 ## Failover/Failback
 - Health monitor ingests node/router signals. State machine phases: detect → declare → promote → update-map → verify.

@@ -27,6 +27,11 @@ npm run dev:web      # Next.js admin console
 - `infra/` – Terraform skeleton for multi-region AWS deployment
 - `docs/` – architecture notes, data models, runbooks
 
+### Durability tiers (product language)
+- Standard: regional sync quorum across 3 AZs, async cross-region.
+- Enhanced: regional sync quorum + streaming cross-region + S3 archive (CRR).
+- Platinum: optional global quorum commit (regional + standby ACK) for near-zero/zero RPO; higher write latency.
+
 ## Architecture (Mermaid)
 
 ```mermaid
