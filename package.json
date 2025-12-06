@@ -1,0 +1,19 @@
+{
+  "name": "fleetshard",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "control-plane-api",
+    "router",
+    "workers",
+    "web-console"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace control-plane-api run dev",
+    "dev:router": "npm --workspace router run dev",
+    "dev:workers": "npm --workspace workers run dev",
+    "dev:web": "npm --workspace web-console run dev",
+    "lint": "echo \"add linting per workspace\"",
+    "test": "echo \"add root tests or trigger workspace tests\""
+  }
+}
