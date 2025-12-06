@@ -34,6 +34,39 @@ const checklist = [
   "Event-driven control plane with audit + replay for shard map changes",
 ];
 
+const governanceSteps = [
+  "Plan intent and blast radius",
+  "Simulate latency/load impact",
+  "Approve with policy-based gates",
+  "Execute via state machines",
+  "Verify lag/latency/data checks",
+  "Report with audit + SLO impact",
+];
+
+const cachingLayers = [
+  "Router-local caches: shard map, policy, connection pools with TTL + invalidation events",
+  "Regional cache: Redis/ElastiCache for hot reads",
+  "Edge cache (optional): for dashboards/read-mostly traffic",
+];
+
+const reliabilityEnvelope = [
+  "Tenant QPS/storage/connection caps to stop noisy-neighbor issues",
+  "Hot-fleet throttling with graceful degradation",
+  "Auto hot-fleet isolation to dedicated or higher-tier shards",
+];
+
+const incidentPlaybooks = [
+  "Detect → classify → recommend remediation",
+  "Open structured incident record (fleets, root cause guess, remediation plan)",
+  "Runbooks-as-code for replica rebuild, traffic drain, policy downgrade, constrained failover",
+];
+
+const lifecycleFinops = [
+  "Data lifecycle: hot (shards), warm (replicas/columnar), cold (S3 lakehouse) with retention + legal holds",
+  "FinOps: per-tenant cost dashboards (storage/compute/replication), predictive budget alerts, spend caps",
+  "Security: per-tenant encryption boundaries, data classification/residency, immutable audit for policy and failover",
+];
+
 export default function Home() {
   return (
     <div className={styles.container}>
@@ -171,6 +204,150 @@ export default function Home() {
               <p className={styles.subtle}>Routers in each region, shard node groups, WAL/CDC agents, caches.</p>
               <p>Read/write routing, bounded staleness, per-tenant isolation, circuit breakers, per-region health.</p>
             </div>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2>Policy-driven platform</h2>
+            <p className={styles.subtle}>Durability, consistency, residency, cost, and operational approvals are all policy-controlled.</p>
+          </div>
+          <div className={styles.listColumns}>
+            <ul>
+              <li>Durability policies: regional vs global quorum, streaming vs S3 lanes</li>
+              <li>Consistency per fleet: strong / bounded / eventual</li>
+              <li>Residency constraints: allowed regions/AZs with audit</li>
+              <li>Cost/SLO caps: autoscale limits, latency targets</li>
+            </ul>
+            <ul>
+              <li>Operational gates: approvals for split/merge/rebalance/promotion</li>
+              <li>Policy versioning + rollback, audit everywhere</li>
+              <li>Routers/workers behavior driven entirely by policies</li>
+            </ul>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2>Governance & safety workflow</h2>
+            <p className={styles.subtle}>Plan → Simulate → Approve → Execute → Verify → Report, with audit events.</p>
+          </div>
+          <div className={styles.listColumns}>
+            <ul>
+              {governanceSteps.slice(0, 3).map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ul>
+            <ul>
+              {governanceSteps.slice(3).map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2>Event-driven control plane</h2>
+            <p className={styles.subtle}>Every state change is an event; replayable, auditable, and used for cache invalidation.</p>
+          </div>
+          <div className={styles.featureGrid}>
+            <div className={styles.featureCard}>
+              <h3>Events emitted</h3>
+              <p className={styles.subtle}>Shard assigned, policy updated, lag alert, failover initiated, routing cache refresh.</p>
+            </div>
+            <div className={styles.featureCard}>
+              <h3>Integrations</h3>
+              <p className={styles.subtle}>Kafka/MSK/EventBridge semantics; downstream automation and audit consumers.</p>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2>Multi-tier caching</h2>
+            <p className={styles.subtle}>Cache strategies that protect shards while keeping latency low.</p>
+          </div>
+          <div className={styles.listColumns}>
+            <ul>
+              {cachingLayers.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2>Tenant reliability envelope</h2>
+            <p className={styles.subtle}>Keep tenants isolated, limit blast radius, and auto-isolate hotspots.</p>
+          </div>
+          <div className={styles.featureGrid}>
+            <div className={styles.featureCard}>
+              <h3>Limits</h3>
+              <p className={styles.subtle}>QPS/storage/connection caps, burst control, noisy-neighbor protections.</p>
+            </div>
+            <div className={styles.featureCard}>
+              <h3>Hot-fleet isolation</h3>
+              <p className={styles.subtle}>Detect sustained p95 latency, WAL pressure, checkpoint anomalies → move to dedicated or higher-tier shards.</p>
+            </div>
+          </div>
+          <div className={styles.listColumns}>
+            <ul>
+              {reliabilityEnvelope.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2>Incident intelligence</h2>
+            <p className={styles.subtle}>Automated detection, classification, and runbooks-as-code.</p>
+          </div>
+          <div className={styles.listColumns}>
+            <ul>
+              {incidentPlaybooks.map((p) => (
+                <li key={p}>{p}</li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2>SLOs, error budgets, and safety gates</h2>
+            <p className={styles.subtle}>Tie deployments and risky ops to budgets; block or gate when burn is high.</p>
+          </div>
+          <div className={styles.featureGrid}>
+            <div className={styles.featureCard}>
+              <h3>SLO hooks</h3>
+              <p className={styles.subtle}>Latency, replica lag, streaming lag, S3 manifest backlog, commit latency.</p>
+            </div>
+            <div className={styles.featureCard}>
+              <h3>Gating</h3>
+              <p className={styles.subtle}>Block shard moves, require approvals when budgets burn fast; progressive rollout with auto-rollback.</p>
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHead}>
+            <h2>Security, lifecycle, and FinOps</h2>
+            <p className={styles.subtle}>Cloud-standard posture: isolation, lifecycle automation, and cost clarity.</p>
+          </div>
+          <div className={styles.listColumns}>
+            <ul>
+              {lifecycleFinops.slice(0, 2).map((p) => (
+                <li key={p}>{p}</li>
+              ))}
+            </ul>
+            <ul>
+              {lifecycleFinops.slice(2).map((p) => (
+                <li key={p}>{p}</li>
+              ))}
+            </ul>
           </div>
         </section>
 
