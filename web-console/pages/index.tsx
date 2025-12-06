@@ -6,7 +6,7 @@ const highlights = [
   "Control plane + data plane separation with DynamoDB Global Tables",
   "Policy-as-code: durability, consistency, residency, cost, approvals",
   "Two-lane replication: streaming (Kinesis/MSK) + S3 CRR archive",
-  "State-machine orchestration and governed workflows (Plan→Simulate→Approve→Execute→Verify→Report)",
+  "State-machine orchestration with governed workflows (Plan→Simulate→Approve→Execute→Verify→Report)",
   "Per-tenant isolation, quotas, and optional dedicated router/shard pools",
   "OpenTelemetry everywhere: traces, metrics, structured audit logs",
 ];
