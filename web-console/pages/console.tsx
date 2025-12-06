@@ -66,6 +66,8 @@ export default function ConsolePage() {
   const [log, setLog] = useState<string[]>([]);
   const [policies, setPolicies] = useState<PolicyDoc[]>([]);
   const [events, setEvents] = useState<EventRecord[]>([]);
+  const [policyError, setPolicyError] = useState<string | null>(null);
+  const [eventError, setEventError] = useState<string | null>(null);
   const [routeResult, setRouteResult] = useState<string>("");
   const [placingFleet, setPlacingFleet] = useState({ fleetId: "f-new", regions: "us-east-1" });
 
@@ -80,11 +82,6 @@ export default function ConsolePage() {
       );
     }, 1200);
     return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    void refreshPolicies();
-    void refreshEvents();
   }, []);
 
   const scoreColor = (val: number, warn: number, danger: number) => {
@@ -151,7 +148,9 @@ export default function ConsolePage() {
       const res = await fetch(`${apiBase}/policies`);
       const data = await res.json();
       setPolicies(data);
+      setPolicyError(null);
     } catch (err) {
+      setPolicyError("Could not reach control-plane API. Start npm run dev:api and try again.");
       setLog((l) => [`Policy fetch failed: ${String(err)}`, ...l].slice(0, 8));
     }
   };
@@ -161,7 +160,9 @@ export default function ConsolePage() {
       const res = await fetch(`${apiBase}/events`);
       const data = await res.json();
       setEvents(data);
+      setEventError(null);
     } catch (err) {
+      setEventError("Could not reach control-plane API. Start npm run dev:api and try again.");
       setLog((l) => [`Event fetch failed: ${String(err)}`, ...l].slice(0, 8));
     }
   };
@@ -328,6 +329,7 @@ export default function ConsolePage() {
               <p className={styles.label}>Policies</p>
               <p className={styles.subtle}>Durability/consistency/residency/cost per policy.</p>
               <button className={styles.button} onClick={refreshPolicies}>Refresh policies</button>
+              {policyError && <p className={styles.subtle}>{policyError}</p>}
               <div className={styles.logBox}>
                 {policies.length === 0 && <p className={styles.subtle}>No policies loaded.</p>}
                 {policies.map((p) => (
@@ -341,6 +343,7 @@ export default function ConsolePage() {
               <p className={styles.label}>Events</p>
               <p className={styles.subtle}>Last 50 control-plane events (mock).</p>
               <button className={styles.button} onClick={refreshEvents}>Refresh events</button>
+              {eventError && <p className={styles.subtle}>{eventError}</p>}
               <div className={styles.logBox}>
                 {events.length === 0 && <p className={styles.subtle}>No events yet.</p>}
                 {events.map((e) => (
