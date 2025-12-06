@@ -108,7 +108,7 @@
   gap: 0.5rem;
 }
 
-input {
+:global(input) {
   width: 100%;
   padding: 0.5rem 0.6rem;
   border-radius: 8px;
@@ -117,7 +117,7 @@ input {
   color: #f3f7ff;
 }
 
-button {
+:global(button) {
   border: none;
   border-radius: 8px;
   background: linear-gradient(120deg, #1f8efa, #11c7a0);
@@ -128,7 +128,7 @@ button {
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
 
-button:hover {
+:global(button:hover) {
   transform: translateY(-1px);
   box-shadow: 0 8px 24px rgba(17, 199, 160, 0.35);
 }
