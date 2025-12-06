@@ -23,6 +23,7 @@ npm run dev:web      # Next.js admin console
 - `router/` – stateless shard router with cache + regional read/write decisions
 - `workers/` – replication/recovery/health/rebalance worker simulator
 - `web-console/` – Next.js admin console (mock data)
+- `analytics-pipeline/` – Iceberg/Delta-style cold/warm analytics sink (mock)
 - `infra/` – Terraform skeleton for multi-region AWS deployment
 - `docs/` – architecture notes, data models, runbooks
 
@@ -97,4 +98,4 @@ flowchart TB
   WkrB --> OBS
 ```
 
-See `docs/` for deeper design notes and runbooks.
+See `docs/` for deeper design notes and runbooks. For cloud-standards enhancements, review `docs/well-architected.md`, `docs/slo.md`, and `docs/state-machines.md`.

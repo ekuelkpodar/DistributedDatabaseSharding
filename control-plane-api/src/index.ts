@@ -1,13 +1,19 @@
 import Fastify from "fastify";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import { policyInputSchema, validatePolicy } from "./policy";
 
 type Region = "us-east-1" | "us-west-2" | "eu-west-1";
+
+type Tier = "bronze" | "silver" | "gold";
 
 type Tenant = {
   id: string;
   name: string;
-  slaTier: "gold" | "silver" | "bronze";
+  slaTier: Tier;
+  dedicatedRouters?: boolean;
+  dedicatedShards?: boolean;
+  kmsKeyArn?: string;
 };
 
 type Fleet = {
@@ -29,10 +35,16 @@ type ShardMapEntry = {
   shardId: string;
   fleets: string[];
   nodes: ShardNode[];
+  replicationLane: "s3-only" | "streaming+s3";
+  consistencyTier: Tier;
+  quotas: {
+    maxQps: number;
+    maxStorageGb: number;
+  };
 };
 
 const tenants: Tenant[] = [
-  { id: "t-acme", name: "Acme Logistics", slaTier: "gold" },
+  { id: "t-acme", name: "Acme Logistics", slaTier: "gold", dedicatedRouters: true, dedicatedShards: true },
   { id: "t-globex", name: "Globex Fleet", slaTier: "silver" },
 ];
 
@@ -78,6 +90,9 @@ const shardMap: ShardMapEntry[] = [
         status: "healthy",
       },
     ],
+    replicationLane: "streaming+s3",
+    consistencyTier: "gold",
+    quotas: { maxQps: 5000, maxStorageGb: 500 },
   },
   {
     shardId: "shard-b1",
@@ -96,6 +111,9 @@ const shardMap: ShardMapEntry[] = [
         status: "healthy",
       },
     ],
+    replicationLane: "s3-only",
+    consistencyTier: "silver",
+    quotas: { maxQps: 2000, maxStorageGb: 300 },
   },
 ];
 
@@ -103,11 +121,19 @@ const placementInputSchema = z.object({
   fleetId: z.string(),
   preferredRegions: z.array(z.string()),
   hotnessScore: z.number().int().min(0).max(100),
+  residency: z.enum(["us-only", "eu-only", "any"]).default("any"),
+  tier: z.enum(["bronze", "silver", "gold"]).default("silver"),
 });
 
 const failoverRequestSchema = z.object({
   shardId: z.string(),
   promoteRegion: z.string(),
+});
+
+const rateLimitSchema = z.object({
+  tenantId: z.string(),
+  qps: z.number().int().min(1),
+  storageGb: z.number().int().min(1),
 });
 
 function findShardByFleet(fleetId: string): ShardMapEntry | undefined {
@@ -118,6 +144,8 @@ function chooseShardForFleet({
   fleetId,
   preferredRegions,
   hotnessScore,
+  residency,
+  tier,
 }: z.infer<typeof placementInputSchema>): ShardMapEntry {
   const existing = findShardByFleet(fleetId);
   if (existing) {
@@ -140,9 +168,15 @@ function chooseShardForFleet({
     (r): r is Region => r === "us-east-1" || r === "us-west-2" || r === "eu-west-1"
   );
 
+  const residencyFiltered = Object.entries(regionScore).filter(([region]) => {
+    if (residency === "eu-only") return region === "eu-west-1";
+    if (residency === "us-only") return region === "us-east-1" || region === "us-west-2";
+    return true;
+  });
+
   const candidateRegion =
     preferredRegion ||
-    (Object.entries(regionScore).sort((a, b) => a[1] - b[1])[0]?.[0] as Region);
+    (residencyFiltered.sort((a, b) => a[1] - b[1])[0]?.[0] as Region);
 
   const shardId = `shard-${candidateRegion}-${hotnessScore}`;
   const newShard: ShardMapEntry = {
@@ -162,6 +196,12 @@ function chooseShardForFleet({
         status: "healthy",
       },
     ],
+    replicationLane: tier === "bronze" ? "s3-only" : "streaming+s3",
+    consistencyTier: tier,
+    quotas: {
+      maxQps: tier === "gold" ? 8000 : tier === "silver" ? 4000 : 1000,
+      maxStorageGb: tier === "gold" ? 1000 : tier === "silver" ? 500 : 200,
+    },
   };
   shardMap.push(newShard);
   return newShard;
@@ -189,6 +229,13 @@ async function main() {
   const app = Fastify({ logger: true });
 
   app.get("/health", async () => ({ status: "ok" }));
+
+  app.post("/policy", async (req, reply) => {
+    const body = policyInputSchema.parse(req.body);
+    const validation = validatePolicy(body);
+    reply.code(201);
+    return { policy: body, validation };
+  });
 
   app.get("/tenants", async () => tenants);
 
@@ -219,6 +266,15 @@ async function main() {
   app.post("/failover/plan", async (req) => {
     const payload = failoverRequestSchema.parse(req.body);
     return planFailover(payload.shardId, payload.promoteRegion);
+  });
+
+  app.post("/rate-limit", async (req) => {
+    const payload = rateLimitSchema.parse(req.body);
+    return {
+      tenantId: payload.tenantId,
+      enforced: true,
+      limits: { qps: payload.qps, storageGb: payload.storageGb },
+    };
   });
 
   const port = Number(process.env.PORT || 4000);

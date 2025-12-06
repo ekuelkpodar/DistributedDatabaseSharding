@@ -10,10 +10,11 @@
 - Routers are stateless, refresh shard-map cache on a short TTL, and choose targets based on op type + consistency mode + region hint.
 
 ## Replication & DR
-- Primaries emit WAL/binlog segments to local staging, uploaded by **Replication Worker** to `s3://<region>/fleetshard/wal/<shard>/<ts>/segment`.
-- S3 Cross-Region Replication handles cross-region propagation.
-- **Recovery Worker** tails replicated manifests and replays to warm standby until LSN alignment.
-- S3 Object Lock optional for immutable archives.
+- Two-lane replication:
+  - Lane A: streaming via Kinesis/MSK for low RPO tiers.
+  - Lane B: S3 + CRR immutable WAL archive with versioned manifests and checksums (authoritative replay).
+- Primaries emit WAL/binlog segments to local staging; Replication Worker ships to S3 and/or stream.
+- Recovery Worker tails manifests and replays to warm standby until LSN alignment. Optional Object Lock.
 
 ## Failover/Failback
 - Health monitor ingests node/router signals. State machine phases: detect → declare → promote → update-map → verify.
@@ -26,3 +27,6 @@
 ## Observability
 - Metrics per shard: latency p50/p95/p99, QPS, replica lag, WAL shipping lag, S3 manifest backlog.
 - Structured events for shard moves, promotions, policy changes; traces across control-plane API + workers + routers.
+
+## Analytics Plane
+- Analytics pipeline sinks cold/warm data to S3 (Iceberg/Delta style) to offload OLTP shards.

@@ -27,6 +27,7 @@ const routeInputSchema = z.object({
   op: z.enum(["read", "write"]),
   regionHint: z.string().optional(),
   consistency: z.enum(["strong", "bounded", "eventual"]).default("bounded"),
+  requestId: z.string().optional(),
 });
 
 let cached: CachedMap | undefined;
@@ -95,6 +96,9 @@ async function start() {
       region: node.region,
       role: node.role,
       cacheAgeMs: cached ? Date.now() - cached.updatedAt : undefined,
+      consistencyTier: shard.consistencyTier,
+      replicationLane: shard.replicationLane,
+      requestId: input.requestId || `req-${Date.now()}`,
     };
   });
 

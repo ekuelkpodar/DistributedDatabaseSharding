@@ -6,6 +6,7 @@ type Shard = {
   standbyRegion: string;
   walBacklog: number;
   replicaLagSeconds: number;
+  state: "healthy" | "degraded" | "promoting" | "verifying";
 };
 
 const shards: Shard[] = [
@@ -15,6 +16,7 @@ const shards: Shard[] = [
     standbyRegion: "us-west-2",
     walBacklog: 3,
     replicaLagSeconds: 2,
+    state: "healthy",
   },
   {
     shardId: "shard-b1",
@@ -22,6 +24,7 @@ const shards: Shard[] = [
     standbyRegion: "us-east-1",
     walBacklog: 6,
     replicaLagSeconds: 5,
+    state: "healthy",
   },
 ];
 
@@ -52,10 +55,24 @@ async function recover(shard: Shard) {
 async function checkHealth(shard: Shard) {
   const degraded = shard.replicaLagSeconds > 10 || shard.walBacklog > 15;
   log(degraded ? "health degraded" : "health ok", shard.shardId);
+  if (degraded && shard.state === "healthy") {
+    shard.state = "promoting";
+    queue.add(() => promoteStateMachine(shard));
+  }
 }
 
 async function rebalance(shard: Shard) {
   log("evaluate placement for hot shard", shard.shardId);
+}
+
+async function promoteStateMachine(shard: Shard) {
+  const opId = `failover-${shard.shardId}-${Date.now()}`;
+  log(`state=promoting op=${opId}`, shard.shardId);
+  shard.state = "verifying";
+  await new Promise((r) => setTimeout(r, 300));
+  shard.primaryRegion = shard.standbyRegion;
+  shard.state = "healthy";
+  log(`state=complete op=${opId}`, shard.shardId);
 }
 
 async function tick() {
