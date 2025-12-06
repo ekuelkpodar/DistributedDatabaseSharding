@@ -2,6 +2,22 @@
   "name": "fleetshard",
   "version": "0.1.0",
   "private": true,
+  "description": "This repo scaffolds a multi-tenant SaaS for global fleet data with 500–1000 database servers across AWS regions. It includes:",
+  "homepage": "https://github.com/ekuelkpodar/DistributedDatabaseSharding#readme",
+  "bugs": {
+    "url": "https://github.com/ekuelkpodar/DistributedDatabaseSharding/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ekuelkpodar/DistributedDatabaseSharding.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
   "workspaces": [
     "control-plane-api",
     "router",

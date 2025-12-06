@@ -1,7 +1,7 @@
 .container {
   min-height: 100vh;
-  padding: 2rem 1.5rem;
-  background: radial-gradient(circle at 10% 20%, #0b1f3a, #050b15 60%);
+  padding: 2.5rem 1.75rem;
+  background: radial-gradient(circle at 20% 20%, #0e1a32, #050b15 60%);
   color: #f3f7ff;
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -9,6 +9,13 @@
 .main {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: flex-start;
 }
 
 .lead {
@@ -22,6 +29,14 @@
   padding: 1.25rem;
   margin-top: 1.5rem;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.panelHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .grid {
@@ -42,4 +57,156 @@
 .card:hover {
   transform: translateY(-2px);
   border-color: rgba(255, 255, 255, 0.16);
+}
+
+.kpiRow {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.kpi {
+  padding: 0.65rem 0.9rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  min-width: 120px;
+}
+
+.kpi span {
+  display: block;
+  color: #9fb1cc;
+  font-size: 12px;
+}
+
+.kpi strong {
+  font-size: 20px;
+}
+
+.controlsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.controlCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.9rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.label {
+  font-weight: 600;
+}
+
+.inlineActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+input {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f3f7ff;
+}
+
+button {
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(120deg, #1f8efa, #11c7a0);
+  color: #050b15;
+  padding: 0.55rem 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(17, 199, 160, 0.35);
+}
+
+.code {
+  display: block;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  color: #c4d1e6;
+}
+
+.cardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pill {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.statRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.bar {
+  position: relative;
+  flex: 1;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 6px;
+}
+
+.state {
+  text-transform: capitalize;
+}
+
+.logBox {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.75rem;
+  min-height: 120px;
+}
+
+.logLine {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  color: #c4d1e6;
+  padding: 0.2rem 0;
+}
+
+.subtle {
+  color: #9fb1cc;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+  color: #7ab3ff;
+  margin: 0;
 }
