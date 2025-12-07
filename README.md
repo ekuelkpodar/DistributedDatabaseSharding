@@ -46,21 +46,30 @@ flowchart TB
 
   subgraph RegionA[AWS Region A]
     RTA[Shard Router Cluster]
-    subgraph DbsA[Shard DB Nodes]
-      A1[(Shard A-1 Primary)]
-      A2[(Shard A-2 Primary)]
-      AR1[(Read Replicas)]
+    subgraph AZA1[AZ-a]
+      A1P[(Shard A-1 Primary)]
     end
-    CdcA[WAL/CDC Agent]
+    subgraph AZA2[AZ-b]
+      A1R1[(Shard A-1 Sync Replica)]
+    end
+    subgraph AZA3[AZ-c]
+      A1R2[(Shard A-1 Sync Replica 2)]
+    end
+    CdcA[Streaming/WAL Agent]
     WkrA[Replication Workers]
     S3A[(S3 Bucket A)]
   end
 
   subgraph RegionB[AWS Region B]
     RTB[Shard Router Cluster]
-    subgraph DbsB[Warm Standby Nodes]
-      B1[(Shard A-1 Standby)]
-      B2[(Shard A-2 Standby)]
+    subgraph BZ1[AZ-a]
+      B1W[(Warm Standby)]
+    end
+    subgraph BZ2[AZ-b]
+      B1R1[(Replica)]
+    end
+    subgraph BZ3[AZ-c]
+      B1R2[(Replica)]
     end
     WkrB[Recovery Workers]
     S3B[(S3 Bucket B)]
@@ -78,14 +87,15 @@ flowchart TB
   GA --> RTA
   GA --> RTB
 
-  RTA --> A1
-  RTA --> A2
-  RTA --> AR1
+  RTA --> A1P
+  RTA --> A1R1
+  RTA --> A1R2
 
   CdcA --> WkrA --> S3A
   S3A -- CRR --> S3B
-  S3B --> WkrB --> B1
-  S3B --> WkrB --> B2
+  S3B --> WkrB --> B1W
+  S3B --> WkrB --> B1R1
+  S3B --> WkrB --> B1R2
 
   SM --> META
   PE --> META

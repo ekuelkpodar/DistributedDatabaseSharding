@@ -6,6 +6,7 @@ type Region = "us-east-1" | "us-west-2" | "eu-west-1";
 type ShardNode = {
   id: string;
   region: Region;
+  az?: string;
   role: "primary" | "replica" | "standby";
   status: "healthy" | "degraded" | "unreachable";
 };

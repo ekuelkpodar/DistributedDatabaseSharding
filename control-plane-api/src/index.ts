@@ -27,6 +27,7 @@ type Fleet = {
 type ShardNode = {
   id: string;
   region: Region;
+  az: string;
   role: "primary" | "replica" | "standby";
   status: "healthy" | "degraded" | "unreachable";
 };
@@ -94,12 +95,14 @@ const shardMap: ShardMapEntry[] = [
       {
         id: "n-a1-primary",
         region: "us-east-1",
+        az: "use1-az1",
         role: "primary",
         status: "healthy",
       },
       {
         id: "n-a1-standby",
         region: "us-west-2",
+        az: "usw2-az2",
         role: "standby",
         status: "healthy",
       },
@@ -118,12 +121,14 @@ const shardMap: ShardMapEntry[] = [
       {
         id: "n-b1-primary",
         region: "eu-west-1",
+        az: "euw1-az1",
         role: "primary",
         status: "healthy",
       },
       {
         id: "n-b1-standby",
         region: "us-east-1",
+        az: "use1-az3",
         role: "standby",
         status: "healthy",
       },
@@ -231,12 +236,14 @@ function chooseShardForFleet({
       {
         id: `${shardId}-primary`,
         region: candidateRegion,
+        az: `${candidateRegion}-az1`,
         role: "primary",
         status: "healthy",
       },
       {
         id: `${shardId}-standby`,
         region: candidateRegion === "us-east-1" ? "us-west-2" : "us-east-1",
+        az: candidateRegion === "us-east-1" ? "usw2-az3" : "use1-az2",
         role: "standby",
         status: "healthy",
       },
